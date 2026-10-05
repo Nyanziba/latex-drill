@@ -19,7 +19,7 @@
 - Python 3.9 以降
 - Windows では `py -3` または `python` コマンド
 - TeX Live に含まれる `uplatex` と `dvipdfmx`
-- TeX Live の `jlreq` クラス、`plautopatch`、`booktabs`
+- TeX Live の `jlreq` クラス、`plautopatch`、`booktabs`、`everyhook`
 
 この教材は `upLaTeX + dvipdfmx` を標準にしています。手元の既存LaTeX環境に合わせた設定です。Pythonの追加パッケージは使いません。
 TeX Live は Linux と Windows をサポートしています。導入手順は [TeX Live公式ガイド](https://tug.org/texlive/doc/texlive-en/texlive-en.html) を参照してください。
@@ -38,15 +38,15 @@ cd latex-drill
 
 ```bash
 sudo apt-get update
-sudo apt-get install texlive-lang-japanese texlive-latex-recommended
+sudo apt-get install --no-install-recommends texlive-lang-japanese texlive-latex-recommended texlive-latex-extra
 ```
 
-Ubuntu 24.04では `texlive-lang-japanese` に `uplatex`、`jlreq`、`plautopatch` が含まれ、`texlive-latex-recommended` に `booktabs` が含まれます（[日本語パッケージ](https://packages.ubuntu.com/noble/all/texlive-lang-japanese/filelist)、[推奨LaTeXパッケージ](https://packages.ubuntu.com/fr/noble/all/texlive-latex-recommended/filelist)）。ほかのLinuxディストリビューションでは、TeX Liveと `uplatex`、`dvipdfmx`、`jlreq`、`plautopatch`、`booktabs` を先にインストールしてください。
+Ubuntu 24.04では `texlive-lang-japanese` に `uplatex`、`jlreq`、`plautopatch`、`texlive-latex-recommended` に `booktabs`、`texlive-latex-extra` に `everyhook` が含まれます（[日本語パッケージ](https://packages.ubuntu.com/noble/all/texlive-lang-japanese/filelist)、[推奨LaTeXパッケージ](https://packages.ubuntu.com/fr/noble/all/texlive-latex-recommended/filelist)、[追加LaTeXパッケージ](https://packages.ubuntu.com/noble/all/texlive-latex-extra/filelist)）。ほかのLinuxディストリビューションでは、TeX Liveと `uplatex`、`dvipdfmx`、`jlreq`、`plautopatch`、`booktabs`、`everyhook` を先にインストールしてください。
 
 ### Windows
 
 1. [Python公式サイト](https://www.python.org/downloads/windows/)から Python 3.9 以降をインストールします。`py -3` ランチャーも利用できるようにしてください。
-2. [TeX Live公式のWindowsインストーラー](https://tug.org/texlive/windows.html)でTeX Liveをインストールします。`uplatex`、`dvipdfmx`、`jlreq`、`plautopatch`、`booktabs` が使える構成にしてください。
+2. [TeX Live公式のWindowsインストーラー](https://tug.org/texlive/windows.html)でTeX Liveをインストールします。`uplatex`、`dvipdfmx`、`jlreq`、`plautopatch`、`booktabs`、`everyhook` が使える構成にしてください。
 3. PowerShellでリポジトリのディレクトリに移動し、課題一覧を表示します。
 
 ```powershell
@@ -60,12 +60,13 @@ Get-Command uplatex, dvipdfmx, kpsewhich
 kpsewhich jlreq.cls
 kpsewhich plautopatch.sty
 kpsewhich booktabs.sty
+kpsewhich everyhook.sty
 ```
 
 不足している場合は、[TeX Live Manager](https://tug.org/texlive/tlmgr.html)で次のコレクションを追加します（共有インストールでは管理者権限が必要なことがあります）。
 
 ```powershell
-tlmgr install collection-langjapanese collection-latexrecommended
+tlmgr install collection-langjapanese collection-latexrecommended collection-latexextra
 ```
 
 ## はじめかた

@@ -24,7 +24,7 @@ missing_texlive_components() {
     done
 
     if command -v kpsewhich >/dev/null 2>&1; then
-        for tex_file in jlreq.cls plautopatch.sty booktabs.sty; do
+        for tex_file in jlreq.cls plautopatch.sty booktabs.sty everyhook.sty; do
             if ! kpsewhich "$tex_file" >/dev/null 2>&1; then
                 missing_components="$missing_components $tex_file"
             fi
@@ -40,7 +40,7 @@ if [ -n "$missing_components" ]; then
 
     if [ ! -r /etc/os-release ] || ! grep -Eiq '^(ID|ID_LIKE)=.*(ubuntu|debian)' /etc/os-release; then
         printf '%s\n' 'Ubuntu / Debian では、次のAPTパッケージをインストールしてください:' >&2
-        printf '%s\n' '  sudo apt-get install texlive-lang-japanese texlive-latex-recommended' >&2
+        printf '%s\n' '  sudo apt-get install --no-install-recommends texlive-lang-japanese texlive-latex-recommended texlive-latex-extra' >&2
         printf '%s\n' 'ほかの環境ではTeX Liveのパッケージ管理ツールを使ってください。' >&2
         exit 1
     fi
@@ -49,22 +49,22 @@ if [ -n "$missing_components" ]; then
         printf '%s\n' '対話端末で ./install.sh を実行すると、APTインストールを確認できます。' >&2
         printf '%s\n' '手動の場合:' >&2
         printf '%s\n' '  sudo apt-get update' >&2
-        printf '%s\n' '  sudo apt-get install texlive-lang-japanese texlive-latex-recommended' >&2
+        printf '%s\n' '  sudo apt-get install --no-install-recommends texlive-lang-japanese texlive-latex-recommended texlive-latex-extra' >&2
         exit 1
     fi
 
     printf '%s\n' 'APTのパッケージ一覧を更新し、次のパッケージをインストールします:' >&2
-    printf '%s\n' '  texlive-lang-japanese texlive-latex-recommended' >&2
+    printf '%s\n' '  texlive-lang-japanese texlive-latex-recommended texlive-latex-extra' >&2
     printf '%s' '続行しますか? [y/N] ' >&2
     IFS= read -r install_answer
     case "$install_answer" in
         y|Y|yes|YES)
             if [ "$(id -u)" -eq 0 ]; then
                 apt-get update
-                apt-get install -y texlive-lang-japanese texlive-latex-recommended
+                apt-get install -y --no-install-recommends texlive-lang-japanese texlive-latex-recommended texlive-latex-extra
             elif command -v sudo >/dev/null 2>&1; then
                 sudo apt-get update
-                sudo apt-get install -y texlive-lang-japanese texlive-latex-recommended
+                sudo apt-get install -y --no-install-recommends texlive-lang-japanese texlive-latex-recommended texlive-latex-extra
             else
                 printf '%s\n' 'sudo が見つかりません。管理者権限でAPTパッケージをインストールしてください。' >&2
                 exit 1
