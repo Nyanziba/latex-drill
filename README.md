@@ -2,6 +2,8 @@
 
 公式資料を読み、対応する小さな課題を解き、コンパイルと課題条件の確認で自分で進捗を確かめる LaTeX 練習ドリルです。採点者を置かず、エラーごとのヒントから次の一手を探せるようにします。
 
+プロジェクト紹介サイト: <https://nyanziba.github.io/latex-drill/>（GitHub Pages）
+
 ## 3つのトラック
 
 各トラックに3問ずつ、合計9問を収録しています。
@@ -118,3 +120,16 @@ IDは `b01` のような課題IDか、一意に決まる部分文字列を使え
 ## 公式資料の範囲
 
 初級は LaTeX Project が初心者向けコースとして案内している Learn LaTeX 日本語版を軸にし、日本語エンジンと和文用文書クラスの追加レッスンも取り上げます。中級は AMS の `amsmath` ガイドを含む利用者向け資料、上級は LaTeX Project Team の著者・クラス・パッケージ開発者向け資料を参照します。上級トラックは一般の文書作成入門とは対象が異なります。
+
+## Webサイトの生成
+
+紹介サイトの原稿は [`site/index.tex`](site/index.tex) です。TeX4ht の `make4ht` でHTML5へ変換し、GitHub Actions が GitHub Pages に公開します。TeX4ht は LaTeX 文書を HTML などへ変換するシステムです（[TeX4ht公式資料](https://tug.org/tex4ht/)、[make4ht公式資料](https://github.com/michal-h21/make4ht)）。
+
+ローカルで生成する場合は、LuaLaTeXと `make4ht` を含むTeX Live環境を用意してから実行します。
+
+```bash
+cd site
+make4ht -l -f html5 -c site.cfg -B ../.build/site -d ../_site index.tex
+```
+
+GitHub Pages は `main` へのpushごとに再生成・公開します。公開元はGitHub Pagesの設定で「GitHub Actions」を選びます（[GitHub Pages公式手順](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)）。

@@ -1,0 +1,108 @@
+\documentclass[12pt]{article}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+\title{LaTeX Drill}
+\author{}
+\date{}
+
+\begin{document}
+\HCode{<a class="skip-link" href="&num;main">本文へスキップ</a>}
+\HCode{<header class="site-header"><nav class="site-nav" aria-label="メインナビゲーション"><a class="site-brand" href="https://github.com/Nyanziba/latex-drill">latex-drill</a><div class="nav-links"><a href="&num;curriculum">カリキュラム</a><a href="&num;install">はじめかた</a><a href="&num;sources">公式資料</a></div></nav></header><main id="main" class="site-main">}
+
+\maketitle
+
+\begin{quote}
+公式資料を読み、手を動かして身につけるLaTeX練習ドリルです。小さな課題を解いて、コンパイルと課題条件の確認で進み具合を確かめます。
+\end{quote}
+
+\HCode{<div class="hero-actions">}
+\href{#curriculum}{\textbf{カリキュラムを見る}}
+\qquad
+\href{https://github.com/Nyanziba/latex-drill}{\textbf{GitHubでドリルを開く}}
+\HCode{</div>}
+
+\begin{itemize}
+  \item 初級・中級・上級の3トラック
+  \item 公式資料に対応した全9題
+  \item Windows / Linux / WSLで利用可能
+\end{itemize}
+
+\hypertarget{curriculum}{}
+\section*{3段階、9つの課題}
+
+課題には読み物、TODO付きのLaTeXファイル、ヒント、解答例があります。各トラックの題材を選び、ドリルのコマンドで読み物と練習を行き来できます。
+
+\HCode{<div class="track-grid"><article class="track-card">}
+\subsection*{初級}
+文書の骨組みから数式まで、LaTeXの基本を順に練習します。
+\begin{itemize}
+  \item 文書構造と和文の組版
+  \item 論理構造、強調、リスト
+  \item 数式モードと基本数式
+\end{itemize}
+\href{https://github.com/Nyanziba/latex-drill/tree/main/docs/beginner}{初級の読み物を開く}
+\HCode{</article><article class="track-card">}
+
+\subsection*{中級}
+レポートで使う図表、参照、文献の管理を身につけます。
+\begin{itemize}
+  \item 図表を読みやすく配置する
+  \item ラベルと相互参照を解決する
+  \item 引用と参考文献を管理する
+\end{itemize}
+\href{https://github.com/Nyanziba/latex-drill/tree/main/docs/intermediate}{中級の読み物を開く}
+\HCode{</article><article class="track-card">}
+
+\subsection*{上級}
+再利用可能なコマンドや小さなパッケージを作ります。expl3を使った状態管理も扱います。
+\begin{itemize}
+  \item コマンドと環境を定義する
+  \item 独自の \texttt{.sty} パッケージを作る
+  \item expl3の変数と関数を使う
+\end{itemize}
+\href{https://github.com/Nyanziba/latex-drill/tree/main/docs/advanced}{上級の読み物を開く}
+\HCode{</article></div>}
+
+\hypertarget{install}{}
+\section*{はじめかた}
+
+Ubuntu / WSLではリポジトリを取得し、インストーラーを実行します。
+
+\begin{verbatim}
+git clone https://github.com/Nyanziba/latex-drill.git
+cd latex-drill
+./install.sh
+./drill list
+./drill watch b01
+\end{verbatim}
+
+WindowsではPython 3.9以降とTeX Liveを用意して、PowerShellから次を実行します。
+
+\begin{verbatim}
+.\drill.bat list
+.\drill.bat watch b01
+\end{verbatim}
+
+\subsection*{解いて確認する}
+
+課題ファイルの \texttt{\% TODO} を解決して保存すると、自動で条件確認とコンパイルが走ります。すべての条件を満たしたら \texttt{\% I AM NOT DONE} を削除します。まず一覧と対応する読み物を確認してください。
+
+\begin{verbatim}
+./drill list
+./drill read b01
+\end{verbatim}
+
+\hypertarget{sources}{}
+\section*{公式資料から学ぶ}
+
+練習内容はLaTeX ProjectやAMSが公開する資料をもとに構成しています。原文の転載ではなく、課題に必要な要点を日本語で説明し、各レッスンから公式の参照先へ移動できるようにしています。
+
+\begin{itemize}
+  \item \href{https://www.learnlatex.org/ja/}{Learn LaTeX 日本語版}: 初級の入門レッスン
+  \item \href{https://www.latex-project.org/help/documentation/amsldoc_jpn.pdf}{AMS amsmathユーザーガイド}: 数式と中級課題
+  \item \href{https://www.latex-project.org/help/documentation/}{LaTeX Project文書一覧}: 著者・クラス・パッケージ開発者向け資料
+  \item \href{https://tug.org/tex4ht/}{TeX4ht}: LaTeX文書からHTMLを生成するツール
+\end{itemize}
+
+\HCode{</main><footer class="site-footer"><p>サイト原稿はLaTeXで管理し、TeX4htでHTMLに変換しています。</p><a href="https://github.com/Nyanziba/latex-drill">GitHubリポジトリ</a></footer>}
+\end{document}
