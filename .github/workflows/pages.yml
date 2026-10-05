@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/pages.yml"
       - "site/**"
+      - "docs/**"
       - "README.md"
   workflow_dispatch:
 
@@ -40,7 +41,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             texlive-extra-utils \
             texlive-latex-recommended \
-            texlive-luatex
+            texlive-luatex \
+            pandoc
 
       - name: Prepare LaTeX build directory
         run: |
@@ -51,8 +53,28 @@ jobs:
         working-directory: .build/site
         run: make4ht -l -f html5 -c site.cfg -d ../../_site index.tex
 
+      - name: Convert lesson Markdown to HTML5
+        shell: bash
+        run: |
+          for source in docs/beginner/*.md docs/intermediate/*.md docs/advanced/*.md; do
+            relative_path="${source#docs/}"
+            output_path="_site/lessons/${relative_path%.md}.html"
+            lesson_title="$(sed -n '1s/^# //p' "$source")"
+            mkdir -p "$(dirname "$output_path")"
+            pandoc "$source" \
+              --from=markdown+task_lists \
+              --to=html5 \
+              --standalone \
+              --template=site/reading-template.html \
+              --metadata "title=$lesson_title" \
+              --output="$output_path"
+          done
+
       - name: Check generated site files
-        run: test -s _site/index.html && test -s _site/site.css
+        run: |
+          test -s _site/index.html
+          test -s _site/site.css
+          test "$(find _site/lessons -name '*.html' | wc -l)" -eq 9
 
       - name: Upload website artifact
         uses: actions/upload-pages-artifact@v4

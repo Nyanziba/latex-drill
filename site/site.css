@@ -108,6 +108,84 @@ a:focus-visible {
   padding: 3.5rem 0 5rem;
 }
 
+.reading-main {
+  width: min(100% - 2rem, 58rem);
+  margin-inline: auto;
+  padding: 2.5rem 0 4rem;
+}
+
+.reading-content {
+  min-width: 0;
+  padding: clamp(1.25rem, 5vw, 3.25rem);
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--card);
+  box-shadow: 0 8px 24px rgb(19 33 57 / 5%);
+}
+
+.reading-content > :first-child {
+  margin-top: 0;
+}
+
+.reading-content h1 {
+  margin: 0 0 2.25rem;
+  color: var(--navy);
+  font-size: clamp(2rem, 5vw, 3.1rem);
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+.reading-content h2 {
+  margin: 2.5rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  letter-spacing: -0.015em;
+}
+
+.reading-content h3 {
+  margin: 1.75rem 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.reading-content ul,
+.reading-content ol {
+  padding-left: 1.5rem;
+}
+
+.reading-content li + li {
+  margin-top: 0.35rem;
+}
+
+.reading-content a {
+  overflow-wrap: anywhere;
+}
+
+.reading-content ul.task-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.reading-content ul.task-list li > label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.reading-content ul.task-list input[type="checkbox"] {
+  flex: 0 0 auto;
+  margin-top: 0.55rem;
+  accent-color: var(--accent);
+}
+
+.lesson-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
 .maketitle {
   margin: 0;
   padding: 3.25rem 0 0.25rem;
@@ -295,6 +373,10 @@ pre code {
 
   .site-main {
     padding-top: 2rem;
+  }
+
+  .reading-main {
+    padding-block: 1.5rem 3rem;
   }
 
   .site-main > ul:first-of-type {

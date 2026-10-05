@@ -123,15 +123,33 @@ IDは `b01` のような課題IDか、一意に決まる部分文字列を使え
 
 ## Webサイトの生成
 
-紹介サイトの原稿は [`site/index.tex`](site/index.tex) です。TeX4ht の `make4ht` でHTML5へ変換し、GitHub Actions が GitHub Pages に公開します。TeX4ht は LaTeX 文書を HTML などへ変換するシステムです（[TeX4ht公式資料](https://tug.org/tex4ht/)、[make4ht公式資料](https://github.com/michal-h21/make4ht)）。
+公開サイトでは、[`site/index.tex`](site/index.tex) から生成した紹介ページに加え、`docs/` にある初級・中級・上級の読み物9本をそれぞれのWebページに掲載します。読み物の本文はMarkdownの原稿を保ち、PandocでHTML5へ変換します。LaTeXの紹介ページはTeX4htの `make4ht` でHTML5へ変換します。Pandocの `--standalone` とテンプレートで、読み物を共通のヘッダー・フッター付きHTMLとして生成できます（[Pandoc公式ガイド](https://pandoc.org/getting-started.html)、[TeX4ht公式資料](https://tug.org/tex4ht/)、[make4ht公式資料](https://github.com/michal-h21/make4ht)）。
 
-ローカルで生成する場合は、LuaLaTeXと `make4ht` を含むTeX Live環境を用意してから実行します。
+公開URL: <https://nyanziba.github.io/latex-drill/>
+
+GitHub Actionsは `main` へのpush時にLaTeXページと全9本の読み物を生成し、GitHub Pagesへ公開します。`docs/` の変更も再公開の対象です。Pandocはサイト生成だけに使い、ドリルの実行には必要ありません。
+
+ローカルで全ページを生成する場合は、LuaLaTeXと `make4ht` を含むTeX Live環境、およびPandocを用意してから実行します。
 
 ```bash
 mkdir -p .build/site _site
 cp site/index.tex site/site.cfg site/site.css .build/site/
 cd .build/site
 make4ht -l -f html5 -c site.cfg -d ../../_site index.tex
+cd ../..
+for source in docs/beginner/*.md docs/intermediate/*.md docs/advanced/*.md; do
+  relative_path="${source#docs/}"
+  output_path="_site/lessons/${relative_path%.md}.html"
+  lesson_title="$(sed -n '1s/^# //p' "$source")"
+  mkdir -p "$(dirname "$output_path")"
+  pandoc "$source" \
+    --from=markdown+task_lists \
+    --to=html5 \
+    --standalone \
+    --template=site/reading-template.html \
+    --metadata "title=$lesson_title" \
+    --output="$output_path"
+done
 ```
 
 GitHub Pages は `main` へのpushごとに再生成・公開します。公開元はGitHub Pagesの設定で「GitHub Actions」を選びます（[GitHub Pages公式手順](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)）。
