@@ -1,0 +1,204 @@
+{
+  "level": "advanced",
+  "display_name": "上級",
+  "exercises": [
+    {
+      "id": "a01",
+      "title": "再利用できるコマンドと環境",
+      "lecture": "docs/advanced/a01.md",
+      "exercise_dir": "exercises/a01",
+      "template_dir": "templates/a01",
+      "solution_dir": "solutions/a01",
+      "main": "main.tex",
+      "engine": "uplatex",
+      "checks": [
+        {
+          "file": "main.tex",
+          "contains": "\\documentclass{jlreq}",
+          "hint": "文書クラスに jlreq を指定してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\NewDocumentCommand{\\DrillTerm}{m}",
+          "hint": "必須引数を1つ取る \\DrillTerm を NewDocumentCommand で定義してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\NewDocumentEnvironment{drillnote}{m}",
+          "hint": "タイトル引数を1つ取る drillnote 環境を NewDocumentEnvironment で定義してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\DrillTerm{",
+          "hint": "定義したコマンドを本文で使ってください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\begin{drillnote}{",
+          "hint": "定義した環境にタイトルを渡して本文で使ってください。"
+        }
+      ],
+      "references": [
+        {
+          "title": "LaTeX for authors — current version (Japanese translation)",
+          "url": "https://www.latex-project.org/help/documentation/usrguide_ja_w_annotations.pdf"
+        },
+        {
+          "title": "LaTeX Documentation — core documentation index",
+          "url": "https://www.latex-project.org/help/documentation/"
+        }
+      ],
+      "hints": [
+        "コマンドの引数仕様と処理を分けて考え、必須引数を m で宣言します。",
+        "環境は開始側と終了側の処理を別々に指定できます。開始側で見出しを出し、終了側で段落を閉じる設計を試してください。",
+        "同じ意味の表示を本文に何度も直接書かず、定義したコマンドと環境を複数回利用します。"
+      ]
+    },
+    {
+      "id": "a02",
+      "title": "小さな .sty パッケージを作る",
+      "lecture": "docs/advanced/a02.md",
+      "exercise_dir": "exercises/a02",
+      "template_dir": "templates/a02",
+      "solution_dir": "solutions/a02",
+      "main": "main.tex",
+      "completion_files": [
+        "main.tex",
+        "drillbrand.sty"
+      ],
+      "engine": "uplatex",
+      "checks": [
+        {
+          "file": "main.tex",
+          "contains": "\\documentclass{jlreq}",
+          "hint": "文書クラスに jlreq を指定してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\usepackage{drillbrand}",
+          "hint": "作成した drillbrand パッケージを文書から読み込んでください。"
+        },
+        {
+          "file": "drillbrand.sty",
+          "contains": "\\ProvidesPackage{drillbrand}",
+          "hint": "パッケージファイル自身を ProvidesPackage で識別してください。"
+        },
+        {
+          "file": "drillbrand.sty",
+          "contains": "\\newcommand{\\DrillBadge}[1]",
+          "hint": "パッケージが提供する DrillBadge コマンドを必須引数1つで定義してください。"
+        },
+        {
+          "file": "drillbrand.sty",
+          "contains": "\\newenvironment{drillquote}",
+          "hint": "パッケージが提供する drillquote 環境を定義してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\DrillBadge{",
+          "hint": "パッケージが提供する DrillBadge を本文で使ってください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\begin{drillquote}",
+          "hint": "パッケージが提供する drillquote を本文で使ってください。"
+        }
+      ],
+      "references": [
+        {
+          "title": "LaTeX for class and package authors — current version",
+          "url": "https://www.latex-project.org/help/documentation/clsguide.pdf"
+        },
+        {
+          "title": "LaTeX Documentation — core documentation index",
+          "url": "https://www.latex-project.org/help/documentation/"
+        }
+      ],
+      "hints": [
+        "main.tex と同じディレクトリに drillbrand.sty を置き、文書側からパッケージ名で読み込みます。",
+        "パッケージの識別行を先頭に置き、その後に利用者向けのコマンドと環境を定義します。",
+        "この課題では新しい依存パッケージを使わず、LaTeX の基本的な定義だけで機能を作ります。"
+      ]
+    },
+    {
+      "id": "a03",
+      "title": "expl3 の変数と関数で状態を扱う",
+      "lecture": "docs/advanced/a03.md",
+      "exercise_dir": "exercises/a03",
+      "template_dir": "templates/a03",
+      "solution_dir": "solutions/a03",
+      "main": "main.tex",
+      "engine": "uplatex",
+      "checks": [
+        {
+          "file": "main.tex",
+          "contains": "\\documentclass{jlreq}",
+          "hint": "文書クラスに jlreq を指定してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\ExplSyntaxOn",
+          "hint": "expl3 の関数名を記述する区間を ExplSyntaxOn で開始してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\tl_new:N \\g_latexdrill_topic_tl",
+          "hint": "テーマを保存する expl3 の大域 token list 変数を宣言してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\cs_new_protected:Npn \\latexdrill_set_topic:n",
+          "hint": "引数を受け取り、変数を更新する保護された expl3 関数を定義してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\tl_gset:Nn \\g_latexdrill_topic_tl",
+          "hint": "setter 関数の中で token list 変数に値を設定してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\tl_use:N \\g_latexdrill_topic_tl",
+          "hint": "getter 側で token list の現在値を取り出してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\NewDocumentCommand{\\DrillSetTopic}{m}",
+          "hint": "本文から呼びやすい DrillSetTopic コマンドを1引数で公開してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\NewDocumentCommand{\\DrillPrintTopic}{}",
+          "hint": "本文から現在の値を表示する DrillPrintTopic コマンドを公開してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\ExplSyntaxOff",
+          "hint": "expl3 の命名規則を使う区間を ExplSyntaxOff で閉じてください。"
+        }
+      ],
+      "references": [
+        {
+          "title": "LaTeX for authors — current version (Japanese translation)",
+          "url": "https://www.latex-project.org/help/documentation/usrguide_ja_w_annotations.pdf"
+        },
+        {
+          "title": "LaTeX for class and package authors — current version",
+          "url": "https://www.latex-project.org/help/documentation/clsguide.pdf"
+        },
+        {
+          "title": "The L3 programming layer interface documentation",
+          "url": "https://mirrors.ctan.org/macros/latex/required/l3kernel/interface3.pdf"
+        },
+        {
+          "title": "LaTeX Documentation — official index for core documentation",
+          "url": "https://www.latex-project.org/help/documentation/"
+        }
+      ],
+      "hints": [
+        "expl3 の型付き命名では、変数名の末尾が型を表し、関数名の末尾が引数形を表します。",
+        "値を保存する関数と、その値を利用する関数を分けると、状態の更新と表示の責務が読み取りやすくなります。",
+        "expl3 の関数名に含まれる _ や : を通常の LaTeX 入力として解釈させるため、定義と公開コマンドの範囲を ExplSyntaxOn / ExplSyntaxOff で囲みます。"
+      ]
+    }
+  ]
+}

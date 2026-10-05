@@ -1,0 +1,29 @@
+\documentclass{jlreq}
+
+\ExplSyntaxOn
+\tl_new:N \g_latexdrill_topic_tl
+
+\cs_new_protected:Npn \latexdrill_set_topic:n #1
+  { \tl_gset:Nn \g_latexdrill_topic_tl {#1} }
+
+\cs_new:Npn \latexdrill_print_topic:
+  { \tl_use:N \g_latexdrill_topic_tl }
+
+\NewDocumentCommand{\DrillSetTopic}{m}
+  { \latexdrill_set_topic:n {#1} }
+\NewDocumentCommand{\DrillPrintTopic}{}
+  { \latexdrill_print_topic: }
+\ExplSyntaxOff
+
+\begin{document}
+\title{expl3 の変数と関数}
+\author{latex-drill}
+\maketitle
+
+\DrillSetTopic{マクロの部品化}
+最初のテーマ: \DrillPrintTopic
+
+\DrillSetTopic{変数の更新}
+更新後のテーマ: \DrillPrintTopic
+
+\end{document}

@@ -1,0 +1,182 @@
+{
+  "level": "beginner",
+  "display_name": "初級",
+  "exercises": [
+    {
+      "id": "b01",
+      "title": "最小の和文文書構造",
+      "lecture": "docs/beginner/b01.md",
+      "exercise_dir": "exercises/b01",
+      "template_dir": "templates/b01",
+      "solution_dir": "solutions/b01",
+      "main": "main.tex",
+      "engine": "uplatex",
+      "checks": [
+        {
+          "file": "main.tex",
+          "contains": "\\documentclass{jlreq}",
+          "hint": "文書クラスをjlreqにしてください。クラス指定はプリアンブルに置きます。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\begin{document}",
+          "hint": "本文を開始する\\begin{document}があるか確認してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "LaTeXで和文文書を作ります。",
+          "hint": "本文に課題で指定した1段落目を追加してください。句読点も確認してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "段落は空行で分けます。",
+          "hint": "1段落目の後に空行を置き、2段落目を追加してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\end{document}",
+          "hint": "本文を閉じる\\end{document}があるか確認してください。"
+        }
+      ],
+      "references": [
+        {
+          "title": "LaTeX文書の基本構造（Learn LaTeX 日本語版・レッスン3）",
+          "url": "https://www.learnlatex.org/ja/lesson-03"
+        },
+        {
+          "title": "和文用文書クラスと縦書き（Learn LaTeX 日本語版・和文レッスン2）",
+          "url": "https://www.learnlatex.org/ja/language-02"
+        },
+        {
+          "title": "日本語LaTeXとDVIウェア（Learn LaTeX 日本語版・和文レッスン1）",
+          "url": "https://www.learnlatex.org/ja/language-01"
+        }
+      ],
+      "hints": [
+        "\\documentclass{jlreq}で文書クラスを指定し、\\begin{document}と\\end{document}の間に本文を書きます。",
+        "段落を分けるときは、ソースに空行を1行入れます。単なる改行だけでは段落は分かれません。",
+        "upLaTeXはDVIを出力するため、PDFを作るときはdvipdfmxで変換します。"
+      ]
+    },
+    {
+      "id": "b02",
+      "title": "論理構造・強調・リスト",
+      "lecture": "docs/beginner/b02.md",
+      "exercise_dir": "exercises/b02",
+      "template_dir": "templates/b02",
+      "solution_dir": "solutions/b02",
+      "main": "main.tex",
+      "engine": "uplatex",
+      "checks": [
+        {
+          "file": "main.tex",
+          "contains": "\\section{文書の構造}",
+          "hint": "見出しを文字の装飾で作らず、指定どおり\\sectionで作ってください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\subsection{強調}",
+          "hint": "小見出しは\\subsection{強調}の形で記述してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\emph{大切}",
+          "hint": "強調したい語を\\emphの波括弧で囲んでください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\begin{enumerate}",
+          "hint": "順序のある項目にはenumerate環境を使い、begin/endを対にしてください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\begin{itemize}",
+          "hint": "順序のない項目にはitemize環境を使い、begin/endを対にしてください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\item 設定を確認する。",
+          "hint": "各リスト項目の先頭に\\itemを置き、指定の項目文を書いてください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\item 本文を組み立てる。",
+          "hint": "番号付きリストに2つ目の指定項目を追加してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\end{enumerate}",
+          "hint": "番号付きリストを\\end{enumerate}で閉じてください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\item TeX環境",
+          "hint": "番号なしリストに2つ目の指定項目を追加してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\end{itemize}",
+          "hint": "番号なしリストを\\end{itemize}で閉じてください。"
+        }
+      ],
+      "references": [
+        {
+          "title": "文書の論理構造（Learn LaTeX 日本語版・レッスン4）",
+          "url": "https://www.learnlatex.org/ja/lesson-04"
+        },
+        {
+          "title": "和文用文書クラスと縦書き（Learn LaTeX 日本語版・和文レッスン2）",
+          "url": "https://www.learnlatex.org/ja/language-02"
+        }
+      ],
+      "hints": [
+        "\\sectionや\\subsectionは文書の役割を示す命令です。文字サイズや太字を手で調整する代わりに使います。",
+        "\\emphは強調する意図を記録します。日本語文書での見た目はクラスにより異なることがあります。",
+        "番号付きリストにはenumerate、記号付きリストにはitemizeを使い、それぞれの項目を\\itemで始めます。"
+      ]
+    },
+    {
+      "id": "b03",
+      "title": "数式モードと基本数式",
+      "lecture": "docs/beginner/b03.md",
+      "exercise_dir": "exercises/b03",
+      "template_dir": "templates/b03",
+      "solution_dir": "solutions/b03",
+      "main": "main.tex",
+      "engine": "uplatex",
+      "checks": [
+        {
+          "file": "main.tex",
+          "contains": "$a_{n}=a_{1}+(n-1)d$",
+          "hint": "段落内の数式をドル記号で囲み、下付き添字と丸括弧を正しく入力してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\[",
+          "hint": "別行立て数式は\\[で開始してください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\frac{n(a_{1}+a_{n})}{2}",
+          "hint": "分数は\\frac{分子}{分母}の形で入力し、添字も波括弧で囲んでください。"
+        },
+        {
+          "file": "main.tex",
+          "contains": "\\]",
+          "hint": "別行立て数式を\\]で閉じ、開始記号と対にしてください。"
+        }
+      ],
+      "references": [
+        {
+          "title": "数式（Learn LaTeX 日本語版・レッスン10）",
+          "url": "https://www.learnlatex.org/ja/lesson-10"
+        }
+      ],
+      "hints": [
+        "段落の中で使う数式は$...$、独立した行に置く数式は\\[...\\]で囲みます。",
+        "添字には_、累乗には^を使います。添字や指数が複数文字なら波括弧でまとめます。",
+        "数式の中の空白は文章の空白と同じ働きをしません。式は数式モードの中に書いてください。"
+      ]
+    }
+  ]
+}

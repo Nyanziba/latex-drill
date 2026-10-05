@@ -1,0 +1,508 @@
+#!/usr/bin/env python3
+"""Run the LaTeX learning exercises in this repository."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+
+ROOT = Path(__file__).resolve().parent
+CURRICULUM_DIRECTORY = ROOT / "curriculum"
+BUILD_DIRECTORY = ROOT / ".build"
+COMPLETION_MARKER = "I AM NOT DONE"
+TODO_MARKER = "% TODO"
+SUPPORTED_ENGINES = {"uplatex", "platex", "lualatex"}
+TRACK_ORDER = {"beginner": 0, "intermediate": 1, "advanced": 2}
+SAFE_EXERCISE_ID = re.compile(r"[a-z][a-z0-9]*\Z")
+
+
+def fail(message: str) -> int:
+    print(f"エラー: {message}", file=sys.stderr)
+    return 1
+
+
+def repository_path(relative_path: str) -> Path:
+    """Return a manifest path after ensuring it stays inside this repository."""
+    resolved_path = (ROOT / relative_path).resolve()
+    if not resolved_path.is_relative_to(ROOT):
+        raise ValueError(f"リポジトリ外のパスは使えません: {relative_path}")
+    return resolved_path
+
+
+def load_exercises() -> list[dict[str, Any]]:
+    exercise_list: list[dict[str, Any]] = []
+    manifest_paths = sorted(CURRICULUM_DIRECTORY.glob("*.json"))
+    if not manifest_paths:
+        raise ValueError("curriculum/ にトラックの JSON がありません")
+
+    known_ids: set[str] = set()
+    for manifest_path in manifest_paths:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        track_name = manifest.get("display_name", manifest.get("level", manifest_path.stem))
+        for exercise in manifest.get("exercises", []):
+            required_fields = (
+                "id",
+                "title",
+                "lecture",
+                "exercise_dir",
+                "template_dir",
+                "solution_dir",
+                "main",
+                "engine",
+                "checks",
+                "references",
+                "hints",
+            )
+            missing_fields = [field_name for field_name in required_fields if field_name not in exercise]
+            if missing_fields:
+                raise ValueError(
+                    f"{manifest_path.name}: {exercise.get('id', 'ID不明')} に必須項目がありません: "
+                    + ", ".join(missing_fields)
+                )
+            if exercise["id"] in known_ids:
+                raise ValueError(f"課題IDが重複しています: {exercise['id']}")
+            if not SAFE_EXERCISE_ID.fullmatch(exercise["id"]):
+                raise ValueError(f"課題IDに使えない文字があります: {exercise['id']}")
+            if exercise["engine"] not in SUPPORTED_ENGINES:
+                raise ValueError(
+                    f"{exercise['id']}: 未対応のエンジンです: {exercise['engine']}"
+                )
+
+            expected_directories = {
+                "exercise_dir": f"exercises/{exercise['id']}",
+                "template_dir": f"templates/{exercise['id']}",
+                "solution_dir": f"solutions/{exercise['id']}",
+            }
+            for field_name, expected_path in expected_directories.items():
+                if exercise[field_name] != expected_path:
+                    raise ValueError(
+                        f"{manifest_path.name}: {exercise['id']} の {field_name} は "
+                        f"{expected_path} にしてください"
+                    )
+
+            exercise["level"] = manifest.get("level", manifest_path.stem)
+            exercise["track_name"] = track_name
+            exercise["manifest_path"] = manifest_path
+            known_ids.add(exercise["id"])
+            exercise_list.append(exercise)
+
+    exercise_list.sort(
+        key=lambda exercise: (
+            TRACK_ORDER.get(exercise.get("level", ""), 3),
+            exercise["id"],
+        )
+    )
+    return exercise_list
+
+
+def data_directory(exercise: dict[str, Any], field_name: str, parent_name: str) -> Path:
+    """Return one of an exercise's fixed data directories, refusing symlinks."""
+    parent_directory = ROOT / parent_name
+    target_directory = parent_directory / exercise["id"]
+    if parent_directory.is_symlink() or target_directory.is_symlink():
+        raise ValueError(f"課題ディレクトリにシンボリックリンクは使えません: {field_name}")
+    return target_directory
+
+
+def exercise_directory(exercise: dict[str, Any]) -> Path:
+    return data_directory(exercise, "exercise_dir", "exercises")
+
+
+def exercise_build_directory(exercise: dict[str, Any]) -> Path:
+    if BUILD_DIRECTORY.is_symlink():
+        raise ValueError(".build ディレクトリにシンボリックリンクは使えません")
+    build_path = BUILD_DIRECTORY / exercise["id"]
+    if build_path.is_symlink():
+        raise ValueError(f"課題のビルド先にシンボリックリンクは使えません: {exercise['id']}")
+    return build_path
+
+
+def exercise_file(exercise: dict[str, Any], relative_path: str) -> Path:
+    candidate_path = (exercise_directory(exercise) / relative_path).resolve()
+    if not candidate_path.is_relative_to(exercise_directory(exercise)):
+        raise ValueError(f"課題ディレクトリ外のファイルは使えません: {relative_path}")
+    return candidate_path
+
+
+def is_complete(exercise: dict[str, Any]) -> bool:
+    completion_files = exercise.get("completion_files", [exercise["main"]])
+    for relative_path in completion_files:
+        source_path = exercise_file(exercise, relative_path)
+        if not source_path.is_file():
+            return False
+        source_text = source_path.read_text(encoding="utf-8")
+        if COMPLETION_MARKER in source_text or TODO_MARKER in source_text:
+            return False
+    return True
+
+
+def choose_exercise(exercises: list[dict[str, Any]], token: str | None) -> dict[str, Any] | None:
+    if token is None:
+        return next((item for item in exercises if not is_complete(item)), None)
+
+    exact_matches = [item for item in exercises if item["id"] == token]
+    if exact_matches:
+        return exact_matches[0]
+
+    partial_matches = [item for item in exercises if token.lower() in item["id"].lower()]
+    if len(partial_matches) == 1:
+        return partial_matches[0]
+    if len(partial_matches) > 1:
+        matching_ids = ", ".join(item["id"] for item in partial_matches)
+        raise ValueError(f"課題IDが複数に当たります ({matching_ids})。IDを長く指定してください")
+    raise ValueError(f"課題が見つかりません: {token}")
+
+
+def print_exercise_list(exercises: list[dict[str, Any]]) -> None:
+    for track_name in dict.fromkeys(item["track_name"] for item in exercises):
+        print(f"\n{track_name}")
+        for exercise in exercises:
+            if exercise["track_name"] != track_name:
+                continue
+            status = "完了" if is_complete(exercise) else "未完了"
+            print(f"  [{status}] {exercise['id']:<4} {exercise['title']}")
+    print("\n完了にするには、TODOを解消して `% I AM NOT DONE` を削除してください。")
+
+
+def show_lecture(exercise: dict[str, Any]) -> int:
+    lecture_path = repository_path(exercise["lecture"])
+    if not lecture_path.is_file():
+        return fail(f"読み物が見つかりません: {lecture_path.relative_to(ROOT)}")
+    print(lecture_path.read_text(encoding="utf-8"))
+    return 0
+
+
+def show_references(exercise: dict[str, Any]) -> None:
+    print(f"公式資料 — {exercise['id']} {exercise['title']}")
+    for reference in exercise["references"]:
+        print(f"- {reference['title']}: {reference['url']}")
+
+
+def show_hints(exercise: dict[str, Any]) -> None:
+    print(f"ヒント — {exercise['id']} {exercise['title']}")
+    for hint_number, hint_text in enumerate(exercise["hints"], start=1):
+        print(f"{hint_number}. {hint_text}")
+
+
+def show_solution(exercise: dict[str, Any]) -> int:
+    solution_directory = data_directory(exercise, "solution_dir", "solutions")
+    solution_files = sorted(path for path in solution_directory.rglob("*") if path.is_file())
+    if not solution_files:
+        return fail(f"解答例が見つかりません: {solution_directory.relative_to(ROOT)}")
+    for solution_path in solution_files:
+        print(f"--- {solution_path.relative_to(solution_directory).as_posix()} ---")
+        print(solution_path.read_text(encoding="utf-8"))
+    return 0
+
+
+def check_source(exercise: dict[str, Any]) -> bool:
+    all_checks_passed = True
+    for check in exercise["checks"]:
+        source_path = exercise_file(exercise, check["file"])
+        if not source_path.is_file():
+            print(f"  ✗ ファイルがありません: {check['file']}")
+            print(f"    ヒント: {check['hint']}")
+            all_checks_passed = False
+            continue
+
+        source_text = source_path.read_text(encoding="utf-8")
+        if check["contains"] not in source_text:
+            print(f"  ✗ {check['file']} に必要な記述がありません: {check['contains']}")
+            print(f"    ヒント: {check['hint']}")
+            all_checks_passed = False
+
+    completion_files = exercise.get("completion_files", [exercise["main"]])
+    for relative_path in completion_files:
+        source_path = exercise_file(exercise, relative_path)
+        if source_path.is_file() and TODO_MARKER in source_path.read_text(encoding="utf-8"):
+            print(f"  ✗ {relative_path} に未解決の TODO が残っています")
+            all_checks_passed = False
+
+    return all_checks_passed
+
+
+def show_compiler_output(compiler_output: str) -> None:
+    output_lines = compiler_output.strip().splitlines()
+    for output_line in output_lines[-35:]:
+        print(f"    {output_line}")
+
+
+def compile_exercise(exercise: dict[str, Any]) -> tuple[bool, Path | None]:
+    engine = exercise["engine"]
+    executable_names = [engine]
+    if engine in {"uplatex", "platex"}:
+        executable_names.append("dvipdfmx")
+    missing_executables = [name for name in executable_names if shutil.which(name) is None]
+    if missing_executables:
+        print("  ✗ 必要なコマンドが見つかりません: " + ", ".join(missing_executables))
+        print("    TeX Live をインストールし、実行ファイルにPATHを通してください。")
+        return False, None
+
+    source_path = exercise_file(exercise, exercise["main"])
+    if not source_path.is_file():
+        print(f"  ✗ 課題ファイルがありません: {source_path.relative_to(ROOT)}")
+        return False, None
+
+    if BUILD_DIRECTORY.is_symlink():
+        print("  ✗ .build ディレクトリにシンボリックリンクは使えません")
+        return False, None
+    exercise_build_root = exercise_build_directory(exercise)
+    exercise_build_root.mkdir(parents=True, exist_ok=True)
+    build_path = exercise_build_root / f"run-{time.time_ns()}"
+    build_path.mkdir()
+    source_name = source_path.relative_to(exercise_directory(exercise)).as_posix()
+    passes = exercise.get("compile_passes", 2)
+    common_options = [
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "-file-line-error",
+        "-output-directory",
+        str(build_path),
+    ]
+
+    for pass_number in range(1, passes + 1):
+        command = [engine, *common_options, source_name]
+        try:
+            result = subprocess.run(
+                command,
+                cwd=exercise_directory(exercise),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=180,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as error:
+            print(f"  ✗ {engine} が180秒以内に終了しませんでした (パス {pass_number})")
+            if error.stdout:
+                show_compiler_output(str(error.stdout))
+            return False, None
+        except OSError as error:
+            print(f"  ✗ {engine} を起動できませんでした: {error}")
+            return False, None
+
+        if result.returncode != 0:
+            print(f"  ✗ {engine} のコンパイルに失敗しました (パス {pass_number})")
+            show_compiler_output(result.stdout)
+            return False, None
+
+    output_stem = source_path.stem
+    if engine in {"uplatex", "platex"}:
+        dvi_path = build_path / f"{output_stem}.dvi"
+        pdf_path = build_path / f"{output_stem}.pdf"
+        try:
+            result = subprocess.run(
+                ["dvipdfmx", "-o", str(pdf_path), str(dvi_path)],
+                cwd=exercise_directory(exercise),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=180,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            print(f"  ✗ dvipdfmx を実行できませんでした: {error}")
+            return False, None
+        if result.returncode != 0:
+            print("  ✗ DVIからPDFへの変換に失敗しました")
+            show_compiler_output(result.stdout)
+            return False, None
+    else:
+        pdf_path = build_path / f"{output_stem}.pdf"
+
+    if not pdf_path.is_file():
+        print(f"  ✗ PDFが生成されませんでした: {pdf_path.relative_to(ROOT)}")
+        return False, None
+    return True, pdf_path
+
+
+def check_auxiliary_files(exercise: dict[str, Any], build_path: Path) -> bool:
+    all_checks_passed = True
+    for check in exercise.get("aux_checks", []):
+        auxiliary_path = (build_path / check["file"]).resolve()
+        if not auxiliary_path.is_relative_to(build_path.resolve()):
+            print(f"  ✗ 出力ディレクトリ外の補助ファイルは確認できません: {check['file']}")
+            all_checks_passed = False
+            continue
+        if not auxiliary_path.is_file():
+            print(f"  ✗ 補助ファイルがありません: {check['file']}")
+            print(f"    ヒント: {check['hint']}")
+            all_checks_passed = False
+            continue
+        auxiliary_text = auxiliary_path.read_text(encoding="utf-8", errors="replace")
+        if check["contains"] not in auxiliary_text:
+            print(f"  ✗ {check['file']} に必要な生成結果がありません: {check['contains']}")
+            print(f"    ヒント: {check['hint']}")
+            all_checks_passed = False
+    return all_checks_passed
+
+
+def run_exercise(exercise: dict[str, Any]) -> bool:
+    print(f"\n{exercise['id']} — {exercise['title']}")
+    print("課題のソースを確認しています...")
+    if not check_source(exercise):
+        print("課題条件を満たしていません。表示されたヒントを参考に修正してください。")
+        return False
+
+    print(f"{exercise['engine']} でコンパイルしています...")
+    compiled_successfully, pdf_path = compile_exercise(exercise)
+    if not compiled_successfully:
+        print("LaTeXのエラー箇所を確認し、必要なら `./drill hint ID` を参照してください。")
+        return False
+    if not check_auxiliary_files(exercise, pdf_path.parent):
+        print("PDFは生成されましたが、参照などの課題条件を満たしていません。")
+        return False
+
+    print(f"✓ 課題条件を満たし、PDFを生成しました: {pdf_path.relative_to(ROOT)}")
+    if not is_complete(exercise):
+        print("完了を記録するには、TODOを解消して課題ファイルから `% I AM NOT DONE` を削除してください。")
+    return True
+
+
+def reset_exercise(exercise: dict[str, Any]) -> int:
+    template_directory = data_directory(exercise, "template_dir", "templates")
+    target_directory = exercise_directory(exercise)
+    if not template_directory.is_dir():
+        return fail(f"初期状態が見つかりません: {template_directory.relative_to(ROOT)}")
+    if target_directory.exists():
+        shutil.rmtree(target_directory)
+    shutil.copytree(template_directory, target_directory)
+    print(f"{exercise['id']} を初期状態に戻しました。")
+    return 0
+
+
+def clean_build_outputs() -> int:
+    if BUILD_DIRECTORY.is_symlink():
+        return fail(".build ディレクトリにシンボリックリンクは使えません")
+    if not BUILD_DIRECTORY.exists():
+        print("生成物はありません。")
+        return 0
+    try:
+        shutil.rmtree(BUILD_DIRECTORY)
+    except OSError as error:
+        return fail(f"生成物を削除できませんでした。PDFビューアを閉じてください: {error}")
+    print("コンパイル生成物を削除しました。")
+    return 0
+
+
+def source_signature(exercise: dict[str, Any]) -> tuple[tuple[str, int, int, bytes], ...]:
+    source_directory = exercise_directory(exercise)
+    file_signatures: list[tuple[str, int, int, bytes]] = []
+    for source_path in sorted(source_directory.rglob("*")):
+        if source_path.is_symlink() or not source_path.is_file():
+            continue
+        relative_path = source_path.relative_to(source_directory).as_posix()
+        stat_result = source_path.stat()
+        content_digest = hashlib.blake2b(source_path.read_bytes(), digest_size=16).digest()
+        file_signatures.append(
+            (relative_path, stat_result.st_mtime_ns, stat_result.st_size, content_digest)
+        )
+    return tuple(file_signatures)
+
+
+def watch_exercise(exercise: dict[str, Any]) -> int:
+    print(f"{exercise['id']} を監視します。終了するには Ctrl+C を押してください。")
+    try:
+        previous_signature = source_signature(exercise)
+        run_exercise(exercise)
+        while True:
+            time.sleep(0.5)
+            current_signature = source_signature(exercise)
+            if current_signature == previous_signature:
+                continue
+            previous_signature = current_signature
+            run_exercise(exercise)
+    except KeyboardInterrupt:
+        print("\n監視を終了しました。")
+        return 0
+
+
+def print_help() -> None:
+    print(
+        """LaTeX Drill — LaTeXを段階的に練習するドリル
+
+使い方:
+  ./drill list              課題と完了状況を表示
+  ./drill read [ID]         課題に対応する読み物を表示
+  ./drill run [ID]          課題条件を確認してコンパイル
+  ./drill watch [ID]        保存後に自動で再確認
+  ./drill hint ID           ヒントを表示
+  ./drill doc ID            公式資料のURLを表示
+  ./drill solution ID       解答例を表示
+  ./drill reset ID          課題を初期状態に戻す
+  ./drill clean             コンパイル生成物を削除
+  ./drill verify            全課題を確認
+
+IDには課題IDまたは一意に決まる部分文字列を指定できます。
+"""
+    )
+
+
+def configure_terminal_encoding() -> None:
+    """Keep Japanese messages readable in Windows and Unix terminals."""
+    for output_stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(output_stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
+def main(arguments: list[str]) -> int:
+    configure_terminal_encoding()
+    if not arguments or arguments[0] in {"-h", "--help", "help"}:
+        print_help()
+        return 0
+
+    command_name = arguments[0]
+    exercise_token = arguments[1] if len(arguments) > 1 else None
+    try:
+        exercises = load_exercises()
+        if command_name == "list":
+            print_exercise_list(exercises)
+            return 0
+        if command_name == "clean":
+            return clean_build_outputs()
+        if command_name == "verify":
+            results = [run_exercise(exercise) for exercise in exercises]
+            passed_count = sum(results)
+            print(f"\n結果: {passed_count}/{len(exercises)} 課題が通りました。")
+            return 0 if passed_count == len(exercises) else 1
+
+        exercise = choose_exercise(exercises, exercise_token)
+        if exercise is None:
+            print("未完了の課題はありません。")
+            return 0
+        if command_name == "read":
+            return show_lecture(exercise)
+        if command_name == "run":
+            return 0 if run_exercise(exercise) else 1
+        if command_name == "watch":
+            return watch_exercise(exercise)
+        if command_name == "hint":
+            show_hints(exercise)
+            return 0
+        if command_name == "doc":
+            show_references(exercise)
+            return 0
+        if command_name == "solution":
+            return show_solution(exercise)
+        if command_name == "reset":
+            return reset_exercise(exercise)
+        return fail(f"知らないコマンドです: {command_name}。`./drill --help` を確認してください。")
+    except (OSError, json.JSONDecodeError, ValueError, KeyError) as error:
+        return fail(str(error))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

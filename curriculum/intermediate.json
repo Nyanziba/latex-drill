@@ -1,0 +1,97 @@
+{
+  "level": "intermediate",
+  "display_name": "中級",
+  "exercises": [
+    {
+      "id": "i01",
+      "title": "図と表を読みやすく配置する",
+      "lecture": "docs/intermediate/i01.md",
+      "exercise_dir": "exercises/i01",
+      "template_dir": "templates/i01",
+      "solution_dir": "solutions/i01",
+      "main": "main.tex",
+      "engine": "uplatex",
+      "checks": [
+        {"file": "main.tex", "contains": "\\begin{figure}[tb]", "hint": "図をfigure環境に入れ、配置候補を指定してください。"},
+        {"file": "main.tex", "contains": "\\begin{picture}(70,24)", "hint": "外部画像に依存しない模式図をpicture環境内に作ってください。"},
+        {"file": "main.tex", "contains": "\\framebox(70,24)", "hint": "picture環境の枠の中に図の内容を置いてください。"},
+        {"file": "main.tex", "contains": "\\caption{センサー配置}", "hint": "図の内容を表すキャプションを付けてください。"},
+        {"file": "main.tex", "contains": "\\label{fig:layout}", "hint": "図の番号を後から参照できるようにラベルを付けてください。"},
+        {"file": "main.tex", "contains": "\\begin{table}[tb]", "hint": "表をtable環境に入れ、本文から独立して配置できるようにしてください。"},
+        {"file": "main.tex", "contains": "\\begin{tabular}{lrr}", "hint": "3列の表を作り、見出し・条件・数値をそれぞれの列に分けてください。"},
+        {"file": "main.tex", "contains": "\\toprule", "hint": "booktabsの上罫線で表の見出しを区切ってください。"},
+        {"file": "main.tex", "contains": "\\midrule", "hint": "見出しとデータの境目にbooktabsの中罫線を入れてください。"},
+        {"file": "main.tex", "contains": "\\bottomrule", "hint": "表のデータ末尾にbooktabsの下罫線を入れてください。"},
+        {"file": "main.tex", "contains": "\\caption{測定ログ}", "hint": "表にも内容を説明するキャプションを付けてください。"},
+        {"file": "main.tex", "contains": "\\label{tab:measurements}", "hint": "表番号を後から参照できるようにラベルを付けてください。"}
+      ],
+      "references": [
+        {"title": "図と位置調整（Learn LaTeX 日本語版・レッスン7）", "url": "https://www.learnlatex.org/ja/lesson-07"},
+        {"title": "表組み（Learn LaTeX 日本語版・レッスン8）", "url": "https://www.learnlatex.org/ja/lesson-08"}
+      ],
+      "hints": [
+        "図と表の番号を付ける環境はfigureとtableです。配置指定は候補であり、出力位置を強制するものではありません。",
+        "float内では内容を中央に置くために\\centeringを使い、tabularでは列をl・r・rの順に定義します。",
+        "番号を参照する予定がある場合、各captionの直後に対応するlabelを置きます。"
+      ]
+    },
+    {
+      "id": "i02",
+      "title": "ラベルと相互参照を解決する",
+      "lecture": "docs/intermediate/i02.md",
+      "exercise_dir": "exercises/i02",
+      "template_dir": "templates/i02",
+      "solution_dir": "solutions/i02",
+      "main": "main.tex",
+      "engine": "uplatex",
+      "checks": [
+        {"file": "main.tex", "contains": "\\label{sec:measurement}", "hint": "測定方法の節に固有のラベルを付けてください。"},
+        {"file": "main.tex", "contains": "\\begin{equation}", "hint": "平均値の式を番号付きのequation環境に入れてください。"},
+        {"file": "main.tex", "contains": "\\frac{1}{n}", "hint": "平均を試行回数nで割る形にしてください。"},
+        {"file": "main.tex", "contains": "\\sum_{i=1}^{n} x_i", "hint": "式に全n回の測定値を足し合わせる総和を入れてください。"},
+        {"file": "main.tex", "contains": "\\label{eq:mean}", "hint": "式番号を参照するため、equation環境内で式にラベルを付けてください。"},
+        {"file": "main.tex", "contains": "\\ref{sec:measurement}", "hint": "本文から測定方法の節をrefで参照してください。"},
+        {"file": "main.tex", "contains": "\\ref{eq:mean}", "hint": "本文から平均値の式をrefで参照してください。"}
+      ],
+      "aux_checks": [
+        {"file": "main.aux", "contains": "\\newlabel{sec:measurement}", "hint": "補助ファイルに節ラベルが記録されていません。ラベル位置を確かめて再コンパイルしてください。"},
+        {"file": "main.aux", "contains": "\\newlabel{eq:mean}", "hint": "補助ファイルに式ラベルが記録されていません。equation内のラベル位置を確かめて再コンパイルしてください。"}
+      ],
+      "references": [
+        {"title": "相互参照（Learn LaTeX 日本語版・レッスン9）", "url": "https://www.learnlatex.org/ja/lesson-09"}
+      ],
+      "hints": [
+        "labelにはsec:、eq:などの接頭辞を自分で付けると、対象の種類が分かりやすくなります。接頭辞自体はLaTeXの予約語ではありません。",
+        "番号付き要素を参照するときは、番号を確定させる命令や環境の中にlabelを置きます。",
+        "refが??のままなら補助ファイルが未更新の可能性があります。upLaTeXをもう一度実行し、参照先の綴りとlabelの位置も確認してください。"
+      ]
+    },
+    {
+      "id": "i03",
+      "title": "引用と参考文献を文書内で管理する",
+      "lecture": "docs/intermediate/i03.md",
+      "exercise_dir": "exercises/i03",
+      "template_dir": "templates/i03",
+      "solution_dir": "solutions/i03",
+      "main": "main.tex",
+      "engine": "uplatex",
+      "checks": [
+        {"file": "main.tex", "contains": "\\cite{learnlatex12}", "hint": "本文中で参考文献項目のキーをciteで引用してください。"},
+        {"file": "main.tex", "contains": "\\begin{thebibliography}{9}", "hint": "文書内にthebibliography環境で参考文献一覧を作成してください。"},
+        {"file": "main.tex", "contains": "\\bibitem{learnlatex12}", "hint": "citeで使ったキーと同じキーをbibitemに指定してください。"},
+        {"file": "main.tex", "contains": "\\end{thebibliography}", "hint": "thebibliography環境を閉じ、文書末尾までの構造を完成させてください。"},
+        {"file": "main.tex", "contains": "参考文献の引用", "hint": "参考文献項目に、参照した資料の題名を記録してください。"},
+        {"file": "main.tex", "contains": "Learn LaTeX", "hint": "参照したコース名を参考文献項目に記録してください。"}
+      ],
+      "references": [
+        {"title": "参考文献の引用（Learn LaTeX 日本語版・レッスン12）", "url": "https://www.learnlatex.org/ja/lesson-12"},
+        {"title": "The LaTeX2e Sources（LaTeX Project・ltbibl.dtx）", "url": "https://latex-project.org/help/documentation/source2e.pdf"}
+      ],
+      "hints": [
+        "本文側のciteキーと参考文献側のbibitemキーは、一文字も違わないように対応させます。",
+        "少数の文献を扱うこの課題では、thebibliographyとbibitemを文書内に直接書きます。外部の文献データベース処理は使いません。",
+        "文献リストはthebibliography環境で本文の後に置き、資料名と公開元を記入してください。"
+      ]
+    }
+  ]
+}
