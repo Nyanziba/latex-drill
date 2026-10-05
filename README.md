@@ -128,8 +128,10 @@ IDは `b01` のような課題IDか、一意に決まる部分文字列を使え
 ローカルで生成する場合は、LuaLaTeXと `make4ht` を含むTeX Live環境を用意してから実行します。
 
 ```bash
-cd site
-make4ht -l -f html5 -c site.cfg -B ../.build/site -d ../_site index.tex
+mkdir -p .build/site _site
+cp site/index.tex site/site.cfg site/site.css .build/site/
+cd .build/site
+make4ht -l -f html5 -c site.cfg -d ../../_site index.tex
 ```
 
 GitHub Pages は `main` へのpushごとに再生成・公開します。公開元はGitHub Pagesの設定で「GitHub Actions」を選びます（[GitHub Pages公式手順](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)）。

@@ -41,9 +41,14 @@ jobs:
             texlive-extra-utils \
             texlive-luatex
 
+      - name: Prepare LaTeX build directory
+        run: |
+          mkdir -p .build/site _site
+          cp site/index.tex site/site.cfg site/site.css .build/site/
+
       - name: Convert LaTeX source to HTML5
-        working-directory: site
-        run: make4ht -l -f html5 -c site.cfg -B ../.build/site -d ../_site index.tex
+        working-directory: .build/site
+        run: make4ht -l -f html5 -c site.cfg -d ../../_site index.tex
 
       - name: Check generated site files
         run: test -s _site/index.html && test -s _site/site.css
